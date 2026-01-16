@@ -17,6 +17,8 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 async function init() {
+  console.log("🚀 Initialisation de l'app...");
+  
   // Charger les activités
   await loadActivities();
 
@@ -25,7 +27,6 @@ async function init() {
 
   // Afficher un message aléatoire
   randomizeMessage("introMessage", MESSAGES.intro);
-  randomizeMessage("reassurance-text", MESSAGES.reassurance);
 
   // Setup des event listeners
   setupEventListeners();
@@ -40,19 +41,65 @@ async function init() {
 async function loadActivities() {
   try {
     const response = await fetch("./activities.json");
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
     const data = await response.json();
     state.activities = data.activities;
+    console.log(`✅ ${state.activities.length} activités chargées`);
   } catch (error) {
-    console.error("Erreur chargement activités:", error);
-    state.activities = [];
+    console.error("❌ Erreur chargement activités:", error);
+    // Fallback avec quelques activités si le JSON ne charge pas
+    state.activities = getFallbackActivities();
+    console.log("📦 Utilisation des activités de fallback");
   }
+}
+
+// Activités de secours si le JSON ne charge pas
+function getFallbackActivities() {
+  return [
+    {
+      id: "lecture",
+      title: "Temps lecture ensemble",
+      description: "Un livre, un câlin, ta voix",
+      duration: ["30min"],
+      energy: ["basse"],
+      location: "interieur",
+      weather: ["all"],
+      safe: true,
+      materials: "Quelques livres"
+    },
+    {
+      id: "pate",
+      title: "Pâte à modeler",
+      description: "Malaxer, rouler, créer",
+      duration: ["30min", "1h"],
+      energy: ["basse", "moyenne"],
+      location: "interieur",
+      weather: ["all"],
+      safe: true,
+      materials: "Pâte à modeler"
+    },
+    {
+      id: "promenade",
+      title: "Balade dans le quartier",
+      description: "Juste marcher, observer, discuter",
+      duration: ["30min", "1h"],
+      energy: ["basse", "moyenne"],
+      location: "exterieur",
+      weather: ["ensoleille", "nuageux"],
+      safe: true,
+      materials: "Poussette ou chaussures"
+    }
+  ];
 }
 
 // Récupérer la météo
 async function fetchWeather() {
   try {
-    // Utiliser wttr.in pour récupérer la météo
-    const response = await fetch("https://wttr.in/?format=j1");
+    const response = await fetch("https://wttr.in/?format=j1", {
+      signal: AbortSignal.timeout(5000)
+    });
     const data = await response.json();
 
     const currentCondition = data.current_condition[0];
@@ -64,14 +111,11 @@ async function fetchWeather() {
       code: weatherCode,
     };
 
-    // Déterminer le type de météo
     state.weatherCode = getWeatherType(weatherCode);
-
-    // Mettre à jour l'UI
     updateWeatherUI(temp, state.weatherCode);
+    console.log(`🌤️ Météo: ${state.weatherCode}, ${temp}°C`);
   } catch (error) {
-    console.error("Erreur météo:", error);
-    // Météo par défaut
+    console.error("⚠️ Erreur météo:", error);
     state.weatherCode = "nuageux";
     updateWeatherUI(15, "nuageux");
   }
@@ -81,22 +125,12 @@ async function fetchWeather() {
 function getWeatherType(code) {
   const weatherCode = parseInt(code);
 
-  // Codes wttr.in
   if (weatherCode === 113) return "ensoleille";
   if ([116, 119, 122].includes(weatherCode)) return "nuageux";
-  if (
-    [
-      176, 185, 263, 266, 281, 284, 293, 296, 299, 302, 305, 308, 311, 314,
-      317, 320, 353, 356, 359, 362, 365,
-    ].includes(weatherCode)
-  )
-    return "pluie";
-  if (
-    [179, 182, 227, 230, 323, 326, 329, 332, 335, 338, 350, 368, 371, 374, 377, 392, 395].includes(
-      weatherCode
-    )
-  )
-    return "neige";
+  if ([176, 185, 263, 266, 281, 284, 293, 296, 299, 302, 305, 308, 311, 314,
+       317, 320, 353, 356, 359, 362, 365].includes(weatherCode)) return "pluie";
+  if ([179, 182, 227, 230, 323, 326, 329, 332, 335, 338, 350, 368, 371, 374, 
+       377, 392, 395].includes(weatherCode)) return "neige";
 
   return "nuageux";
 }
@@ -105,11 +139,8 @@ function getWeatherType(code) {
 function updateWeatherUI(temp, weatherType) {
   const emoji = getWeatherEmoji(weatherType);
 
-  // Écran questions
   document.getElementById("weatherEmoji").textContent = emoji;
   document.getElementById("weatherTemp").textContent = `${temp}°C`;
-
-  // Écran résultats
   document.getElementById("weatherEmojiResults").textContent = emoji;
   document.getElementById("weatherTempResults").textContent = `${temp}°C`;
 }
@@ -127,26 +158,14 @@ function getWeatherEmoji(weatherType) {
 
 // Setup des event listeners
 function setupEventListeners() {
-  // Boutons de réponse
   const optionBtns = document.querySelectorAll(".option-btn");
   optionBtns.forEach((btn) => {
     btn.addEventListener("click", handleOptionClick);
   });
 
-  // Bouton "Voir les idées"
-  document
-    .getElementById("getActivitiesBtn")
-    .addEventListener("click", handleGetActivities);
-
-  // Bouton retour
-  document.getElementById("backBtn").addEventListener("click", () => {
-    showScreen("questionScreen");
-  });
-
-  // Bouton "Proposer autre chose"
-  document
-    .getElementById("tryAgainBtn")
-    .addEventListener("click", handleTryAgain);
+  document.getElementById("getActivitiesBtn").addEventListener("click", handleGetActivities);
+  document.getElementById("backBtn").addEventListener("click", () => showScreen("questionScreen"));
+  document.getElementById("tryAgainBtn").addEventListener("click", handleTryAgain);
 }
 
 // Gérer le clic sur une option
@@ -155,28 +174,19 @@ function handleOptionClick(e) {
   const question = btn.dataset.question;
   const value = btn.dataset.value;
 
-  // Désélectionner les autres boutons de la même question
-  const siblings = document.querySelectorAll(
-    `.option-btn[data-question="${question}"]`
-  );
+  const siblings = document.querySelectorAll(`.option-btn[data-question="${question}"]`);
   siblings.forEach((sibling) => sibling.classList.remove("selected"));
 
-  // Sélectionner ce bouton
   btn.classList.add("selected");
-
-  // Enregistrer la réponse
   state.answers[question] = value;
 
-  // Vérifier si toutes les questions ont une réponse
+  console.log(`📝 ${question}: ${value}`);
   checkAllAnswered();
 }
 
 // Vérifier si toutes les questions ont une réponse
 function checkAllAnswered() {
-  const allAnswered =
-    state.answers.energy &&
-    state.answers.duration &&
-    state.answers.location;
+  const allAnswered = state.answers.energy && state.answers.duration && state.answers.location;
 
   const btn = document.getElementById("getActivitiesBtn");
   if (allAnswered) {
@@ -190,44 +200,49 @@ function checkAllAnswered() {
 
 // Gérer le clic sur "Voir les idées"
 function handleGetActivities() {
+  console.log("🔍 Recherche d'activités...");
+  console.log("Critères:", state.answers);
   selectActivities();
   showActivities();
   showScreen("activitiesScreen");
 }
 
-// Sélectionner les activités
+// Sélectionner les activités (LOGIQUE SIMPLIFIÉE ET CORRIGÉE)
 function selectActivities() {
   const { energy, duration, location } = state.answers;
   const { weatherCode } = state;
 
-  // Filtrer les activités selon les critères
+  console.log(`🎯 Filtrage: énergie=${energy}, durée=${duration}, lieu=${location}, météo=${weatherCode}`);
+
+  // Étape 1: Filtrage strict
   let filtered = state.activities.filter((activity) => {
     // Vérifier l'énergie
-    if (!activity.energy.includes(energy)) return false;
-
-    // Vérifier la durée
-    if (!activity.duration.includes(duration)) return false;
-
-    // Vérifier le lieu
-    if (location === "peu-importe") {
-      // Accepter tous les lieux
-    } else if (location === "interieur") {
-      if (activity.location !== "interieur" && activity.location !== "both")
-        return false;
-    } else if (location === "exterieur") {
-      if (activity.location !== "exterieur" && activity.location !== "both")
-        return false;
+    if (!activity.energy.includes(energy)) {
+      return false;
     }
 
-    // Vérifier la météo (si extérieur)
-    if (
-      activity.location === "exterieur" ||
-      (activity.location === "both" && location === "exterieur")
-    ) {
-      if (
-        !activity.weather.includes("all") &&
-        !activity.weather.includes(weatherCode)
-      ) {
+    // Vérifier la durée
+    if (!activity.duration.includes(duration)) {
+      return false;
+    }
+
+    // Vérifier le lieu
+    if (location !== "peu-importe") {
+      if (location === "interieur") {
+        if (activity.location !== "interieur" && activity.location !== "both") {
+          return false;
+        }
+      } else if (location === "exterieur") {
+        if (activity.location !== "exterieur" && activity.location !== "both") {
+          return false;
+        }
+      }
+    }
+
+    // Vérifier la météo pour les activités extérieures
+    if (activity.location === "exterieur" || 
+        (activity.location === "both" && location === "exterieur")) {
+      if (!activity.weather.includes("all") && !activity.weather.includes(weatherCode)) {
         return false;
       }
     }
@@ -235,31 +250,36 @@ function selectActivities() {
     return true;
   });
 
-  // Si pas assez d'activités, assouplir les critères
+  console.log(`✅ ${filtered.length} activités après filtrage strict`);
+
+  // Étape 2: Si pas assez, assouplir les critères
   if (filtered.length < 3) {
+    console.log("⚠️ Pas assez d'activités, assouplissement des critères...");
     filtered = state.activities.filter((activity) => {
-      return (
-        activity.energy.includes(energy) &&
-        activity.duration.includes(duration)
-      );
+      return activity.energy.includes(energy) && activity.duration.includes(duration);
     });
+    console.log(`✅ ${filtered.length} activités après assouplissement`);
   }
 
-  // Séparer les activités safe et non-safe
+  // Étape 3: Dernier recours
+  if (filtered.length === 0) {
+    console.log("❌ Aucune activité trouvée, utilisation de toutes les activités");
+    filtered = state.activities;
+  }
+
+  // Étape 4: Séparer safe et non-safe
   const safeActivities = filtered.filter((a) => a.safe);
   const otherActivities = filtered.filter((a) => !a.safe);
 
-  // Sélectionner 3 activités : toujours au moins 1 safe
+  console.log(`🛡️ ${safeActivities.length} activités safe, ${otherActivities.length} autres`);
+
+  // Étape 5: Sélectionner 3 activités avec au moins 1 safe
   let selected = [];
 
-  // Prendre 1 safe
   if (safeActivities.length > 0) {
-    selected.push(
-      safeActivities[Math.floor(Math.random() * safeActivities.length)]
-    );
+    selected.push(safeActivities[Math.floor(Math.random() * safeActivities.length)]);
   }
 
-  // Compléter avec d'autres activités
   const remaining = [...safeActivities, ...otherActivities].filter(
     (a) => !selected.includes(a)
   );
@@ -270,10 +290,10 @@ function selectActivities() {
     remaining.splice(randomIndex, 1);
   }
 
-  // Mélanger l'ordre
   selected = shuffleArray(selected);
-
   state.selectedActivities = selected;
+
+  console.log(`🎉 ${selected.length} activités sélectionnées:`, selected.map(a => a.title));
 }
 
 // Mélanger un tableau
@@ -291,17 +311,13 @@ function showActivities() {
   const container = document.getElementById("activitiesContainer");
   container.innerHTML = "";
 
-  // Message d'introduction aléatoire
   randomizeMessage("resultsIntro", MESSAGES.results);
 
-  // Message de pied de page aléatoire
   const footerMessage = document.querySelector(".footer-message");
   if (footerMessage) {
-    footerMessage.textContent =
-      MESSAGES.footer[Math.floor(Math.random() * MESSAGES.footer.length)];
+    footerMessage.textContent = MESSAGES.footer[Math.floor(Math.random() * MESSAGES.footer.length)];
   }
 
-  // Si pas d'activités
   if (state.selectedActivities.length === 0) {
     container.innerHTML = `
       <div class="no-results">
@@ -312,7 +328,6 @@ function showActivities() {
     return;
   }
 
-  // Créer les cartes d'activités
   state.selectedActivities.forEach((activity) => {
     const card = createActivityCard(activity);
     container.appendChild(card);
@@ -348,13 +363,12 @@ function handleTryAgain() {
 
 // Afficher un écran
 function showScreen(screenId) {
-  // Masquer tous les écrans
   document.querySelectorAll(".screen").forEach((screen) => {
     screen.classList.remove("active");
   });
 
-  // Afficher l'écran demandé
   document.getElementById(screenId).classList.add("active");
+  console.log(`📺 Affichage écran: ${screenId}`);
 }
 
 // Message aléatoire
@@ -371,10 +385,10 @@ if ("serviceWorker" in navigator) {
     navigator.serviceWorker
       .register("/sw.js")
       .then((registration) => {
-        console.log("Service Worker enregistré:", registration);
+        console.log("✅ Service Worker enregistré:", registration);
       })
       .catch((error) => {
-        console.log("Erreur Service Worker:", error);
+        console.log("❌ Erreur Service Worker:", error);
       });
   });
 }

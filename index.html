@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Aide à la décision pour activités avec tes enfants">
+    <meta name="theme-color" content="#FEF3C7">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://wttr.in; media-src 'self';">
+    <title>Aujourd'hui - Activités enfants</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="icon-192.png">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Écran de chargement -->
+    <div class="screen loading-screen active" id="loadingScreen">
+        <div class="emoji">🌤️</div>
+        <div class="loading-message">Je regarde la météo...</div>
+    </div>
+
+    <!-- Écran principal : Questions -->
+    <div class="screen question-screen" id="questionScreen">
+        <div class="header">
+            <h1 class="app-title">Aujourd'hui</h1>
+            <div class="weather-info" id="weatherInfo">
+                <span id="weatherEmoji">☀️</span>
+                <span id="weatherTemp">--°C</span>
+            </div>
+        </div>
+
+        <div class="intro-message" id="introMessage">
+            Tu as du temps avec les petits ? Je t'aide à choisir une activité.
+        </div>
+
+        <!-- Question 1 : Énergie -->
+        <div class="question-block">
+            <label class="question-label">Comment tu te sens là maintenant ?</label>
+            <div class="option-buttons">
+                <button class="option-btn" data-question="energy" data-value="basse">
+                    <span class="option-emoji">🪫</span>
+                    <span class="option-text">Fatigue</span>
+                </button>
+                <button class="option-btn" data-question="energy" data-value="moyenne">
+                    <span class="option-emoji">🔋</span>
+                    <span class="option-text">Ça va</span>
+                </button>
+                <button class="option-btn" data-question="energy" data-value="haute">
+                    <span class="option-emoji">⚡</span>
+                    <span class="option-text">En forme</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Question 2 : Durée -->
+        <div class="question-block">
+            <label class="question-label">Tu as combien de temps ?</label>
+            <div class="option-buttons">
+                <button class="option-btn" data-question="duration" data-value="30min">
+                    <span class="option-emoji">⏱️</span>
+                    <span class="option-text">30 min</span>
+                </button>
+                <button class="option-btn" data-question="duration" data-value="1h">
+                    <span class="option-emoji">⏰</span>
+                    <span class="option-text">1 heure</span>
+                </button>
+                <button class="option-btn" data-question="duration" data-value="2h">
+                    <span class="option-emoji">🕐</span>
+                    <span class="option-text">2 heures</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Question 3 : Lieu -->
+        <div class="question-block">
+            <label class="question-label">Plutôt dedans ou dehors ?</label>
+            <div class="option-buttons">
+                <button class="option-btn" data-question="location" data-value="interieur">
+                    <span class="option-emoji">🏠</span>
+                    <span class="option-text">Dedans</span>
+                </button>
+                <button class="option-btn" data-question="location" data-value="exterieur">
+                    <span class="option-emoji">🌳</span>
+                    <span class="option-text">Dehors</span>
+                </button>
+                <button class="option-btn" data-question="location" data-value="peu-importe">
+                    <span class="option-emoji">🤷</span>
+                    <span class="option-text">Peu importe</span>
+                </button>
+            </div>
+        </div>
+
+        <button class="btn btn-primary disabled" id="getActivitiesBtn" disabled>
+            Voir les idées
+        </button>
+
+        <div class="reassurance-text">
+            Pas d'inquiétude, je te propose juste 3 idées simples.
+        </div>
+    </div>
+
+    <!-- Écran résultats : Activités -->
+    <div class="screen activities-screen" id="activitiesScreen">
+        <div class="header">
+            <button class="back-btn" id="backBtn">← Retour</button>
+            <div class="weather-info" id="weatherInfoResults">
+                <span id="weatherEmojiResults">☀️</span>
+                <span id="weatherTempResults">--°C</span>
+            </div>
+        </div>
+
+        <div class="results-intro" id="resultsIntro">
+            Voilà 3 idées pour toi :
+        </div>
+
+        <div class="activities-container" id="activitiesContainer">
+            <!-- Les cartes d'activités seront insérées ici -->
+        </div>
+
+        <button class="btn btn-secondary" id="tryAgainBtn">
+            Proposer autre chose
+        </button>
+
+        <div class="footer-message">
+            Tu fais de ton mieux. C'est déjà beaucoup. 💚
+        </div>
+    </div>
+
+    <script src="data.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

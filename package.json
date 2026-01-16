@@ -1,0 +1,27 @@
+{
+  "name": "aujourdhui-app",
+  "version": "1.0.0",
+  "description": "Application d'aide à la décision pour activités avec enfants de 1 à 5 ans",
+  "type": "module",
+  "scripts": {
+    "start": "python3 -m http.server 8000",
+    "lint": "eslint *.js",
+    "lint:fix": "eslint *.js --fix",
+    "format": "prettier --write \"**/*.{js,html,css,json,md}\"",
+    "format:check": "prettier --check \"**/*.{js,html,css,json,md}\""
+  },
+  "keywords": [
+    "pwa",
+    "parenting",
+    "activities",
+    "kids",
+    "decision-helper",
+    "mental-load"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "eslint": "^9.17.0",
+    "prettier": "^3.4.2"
+  }
+}
